@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Responsive, WidthProvider, Layout as RGLLayout } from 'react-grid-layout';
 import { Plus, LayoutGrid, User, Bell, Search } from 'lucide-react';
-import { Widget, WidgetLayout, WidgetType, WidgetSize, WidgetConfig } from '@/types/widget';
+import { Widget, WidgetType, WidgetSize, WidgetConfig } from '@/types/widget';
 import { WidgetRenderer } from './widgets/WidgetRenderer';
 import { WidgetLibrary } from './WidgetLibrary';
 import { ConfirmationDialog } from './ConfirmationDialog';
@@ -19,10 +19,13 @@ export function Dashboard() {
     const [isLibraryOpen, setIsLibraryOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
-    const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean; type: 'delete' | 'reset' | null; widgetId?: string }>({
+    const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean; type: 'delete' | 'reset' | 'cancel' | null; widgetId?: string }>({
         isOpen: false,
         type: null,
     });
+    // Backup state for reverting changes
+    const [savedWidgets, setSavedWidgets] = useState<Widget[]>([]);
+    const [savedLayouts, setSavedLayouts] = useState<{ lg: RGLLayout[] }>({ lg: [] });
 
     // Load saved dashboard state from localStorage
     useEffect(() => {
@@ -43,17 +46,32 @@ export function Dashboard() {
         }
     }, []);
 
-    // Save dashboard state to localStorage whenever it changes
+    // Only save to localStorage when not in edit mode (i.e., after Save is clicked)
     useEffect(() => {
-        if (mounted) {
+        if (mounted && !isEditMode) {
             localStorage.setItem('dashboard-widgets', JSON.stringify(widgets));
             localStorage.setItem('dashboard-layouts', JSON.stringify(layouts));
         }
-    }, [widgets, layouts, mounted]);
+    }, [widgets, layouts, mounted, isEditMode]);
+
+    // Enter edit mode and save current state as backup
+    const handleEnterEditMode = () => {
+        // Create deep copies of current state as backup
+        const widgetsCopy = JSON.parse(JSON.stringify(widgets));
+        const layoutsCopy = JSON.parse(JSON.stringify(layouts));
+
+        console.log('Backing up state:', { widgets: widgetsCopy.length, layouts: layoutsCopy.lg.length });
+
+        setSavedWidgets(widgetsCopy);
+        setSavedLayouts(layoutsCopy);
+        setIsEditMode(true);
+    };
 
     // Exit edit mode when opening widget library
     const handleOpenLibrary = () => {
-        setIsEditMode(true);
+        if (!isEditMode) {
+            handleEnterEditMode();
+        }
         setIsLibraryOpen(true);
     };
 
@@ -157,12 +175,6 @@ export function Dashboard() {
         setLayouts({ lg: boundedLayout });
     };
 
-    const handleResetDashboard = () => {
-        setConfirmDialog({
-            isOpen: true,
-            type: 'reset',
-        });
-    };
 
     const confirmResetDashboard = () => {
         localStorage.removeItem('dashboard-widgets');
@@ -172,7 +184,30 @@ export function Dashboard() {
     };
 
     const handleSaveAndExitEdit = () => {
+        // Exit edit mode, which will trigger localStorage save
         setIsEditMode(false);
+    };
+
+    const handleCancelEdit = () => {
+        setConfirmDialog({
+            isOpen: true,
+            type: 'cancel',
+        });
+    };
+
+    const confirmCancelEdit = () => {
+        console.log('Restoring state:', { savedWidgets: savedWidgets.length, savedLayouts: savedLayouts.lg.length });
+
+        // Revert to saved state FIRST, then exit edit mode
+        // This ensures the restored state is what gets saved to localStorage
+        setWidgets([...savedWidgets]);
+        setLayouts({ lg: [...savedLayouts.lg] });
+
+        // Use setTimeout to ensure state updates before exiting edit mode
+        setTimeout(() => {
+            setIsEditMode(false);
+            setConfirmDialog({ isOpen: false, type: null });
+        }, 0);
     };
 
     const handleAutoLayout = () => {
@@ -250,7 +285,7 @@ export function Dashboard() {
 
                     {/* Navigation Tabs */}
                     <nav className="flex gap-3 sm:gap-6 mt-3 sm:mt-4 border-b border-gray-200 -mb-px overflow-x-auto">
-                        {['Dashboard', 'My Curriculum', 'Documents', 'Attendance', 'Invoices', 'Availability'].map((tab) => (
+                        {['Dashboard'].map((tab) => (
                             <button
                                 key={tab}
                                 className={`pb-2 sm:pb-3 text-xs sm:text-sm font-medium transition-colors relative whitespace-nowrap ${tab === 'Dashboard'
@@ -274,14 +309,14 @@ export function Dashboard() {
                     {isEditMode && (
                         <div className="px-3 sm:px-4 py-2 rounded-lg border border-blue-300 bg-blue-50 w-full sm:w-auto">
                             <p className="text-xs sm:text-sm text-blue-800 font-medium">
-                                ✏️ Edit mode enabled • Drag to reposition • Resize • Delete
+                                ✏️ Edit mode enabled • Drag header to reposition • Resize with the blue handle • Delete with the trash icon
                             </p>
                         </div>
                     )}
                     <div className={`flex ${!isEditMode ? 'justify-end w-full' : 'justify-end gap-2 sm:gap-3'} gap-2 sm:gap-3 flex-wrap`}>
                         {!isEditMode ? (
                             <button
-                                onClick={() => setIsEditMode(true)}
+                                onClick={handleEnterEditMode}
                                 className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
                             >
                                 Edit Dashboard
@@ -300,6 +335,12 @@ export function Dashboard() {
                                 >
                                     <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                                     Add Widget
+                                </button>
+                                <button
+                                    onClick={handleCancelEdit}
+                                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors whitespace-nowrap"
+                                >
+                                    Cancel
                                 </button>
                                 <button
                                     onClick={handleSaveAndExitEdit}
@@ -393,6 +434,17 @@ export function Dashboard() {
                 cancelText="Cancel"
                 isDangerous={true}
                 onConfirm={confirmResetDashboard}
+                onCancel={() => setConfirmDialog({ isOpen: false, type: null })}
+            />
+
+            <ConfirmationDialog
+                isOpen={confirmDialog.isOpen && confirmDialog.type === 'cancel'}
+                title="Discard Changes"
+                message="Are you sure you want to cancel? All unsaved changes will be lost."
+                confirmText="Discard"
+                cancelText="Keep Editing"
+                isDangerous={true}
+                onConfirm={confirmCancelEdit}
                 onCancel={() => setConfirmDialog({ isOpen: false, type: null })}
             />
         </div>

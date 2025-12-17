@@ -21,10 +21,10 @@ export function CourseSlider({ courses, onDelete, onSettings, showPinnedOnly = f
   // Filter courses based on pinned status
   const displayCourses = localShowPinned
     ? mockCourses.filter((course) => isPinned(course.id))
-    : courses;
+    : mockCourses;
 
   return (
-    <BaseWidget title="Your Courses" onDelete={onDelete} onSettings={onSettings}>
+    <BaseWidget title="Your Courses (Slider)" onDelete={onDelete} onSettings={onSettings}>
       {isEditMode && (
         <label className="mb-4 flex items-center gap-3 cursor-pointer">
           <span className="text-sm text-gray-600">Pinned only</span>

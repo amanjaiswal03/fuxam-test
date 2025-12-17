@@ -18,7 +18,6 @@ export function ImageWidget({ imageUrl, onDelete, onSettings }: ImageWidgetProps
           <div className="text-center text-gray-400">
             <ImageIcon className="w-12 h-12 mx-auto mb-2" />
             <p className="text-sm">No image set</p>
-            <p className="text-xs mt-1">Click settings to add an image</p>
           </div>
         )}
       </div>

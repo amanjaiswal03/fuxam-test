@@ -41,10 +41,8 @@ export function WidgetRenderer({ widget, onDelete, onSettings, isEditMode = fals
   const handleDelete = onDelete ? () => onDelete(widget.id) : undefined;
   const handleSettings = onSettings ? () => onSettings(widget.id) : undefined;
 
-  const courses = widget.config.showPinnedOnly ? getPinnedCourses() : mockCourses;
-
-  // Use delayed data to show loader
-  const delayedCourses = useDelayedData(courses, 800);
+  // Always use mockCourses - let the widget handle filtering
+  const delayedCourses = useDelayedData(mockCourses, 800);
   const delayedTasks = useDelayedData(mockTasks, 800);
   const delayedAgenda = useDelayedData(mockAgenda, 800);
   const delayedChats = useDelayedData(mockChats, 800);

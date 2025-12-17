@@ -17,22 +17,34 @@ interface CourseTableProps {
 export function CourseTable({ courses, onDelete, onSettings, showPinnedOnly = false, isEditMode = false }: CourseTableProps) {
   const { isPinned, togglePin } = useCoursesContext();
   const [localShowPinned, setLocalShowPinned] = useState(showPinnedOnly);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Filter courses based on pinned status
-  const displayCourses = localShowPinned
+  const pinnedFilteredCourses = localShowPinned
     ? courses.filter((course) => isPinned(course.id))
     : courses;
 
+  // Further filter by search query
+  const displayCourses = pinnedFilteredCourses.filter((course) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      course.name.toLowerCase().includes(query) ||
+      course.code.toLowerCase().includes(query) ||
+      course.instructor.toLowerCase().includes(query)
+    );
+  });
+
   return (
-    <BaseWidget title="Your Courses" onDelete={onDelete} onSettings={onSettings}>
+    <BaseWidget title="Your Courses (Table)" onDelete={onDelete} onSettings={onSettings}>
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-4">
           <div className="flex-1 relative">
-
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
               placeholder="Search courses..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
@@ -67,37 +79,45 @@ export function CourseTable({ courses, onDelete, onSettings, showPinnedOnly = fa
               </tr>
             </thead>
             <tbody>
-              {displayCourses.map((course) => (
-                <tr key={course.id} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-3 px-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg flex items-center justify-center text-white font-semibold text-xs">
-                        {course.name.charAt(0)}
+              {displayCourses.length > 0 ? (
+                displayCourses.map((course) => (
+                  <tr key={course.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="py-3 px-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg flex items-center justify-center text-white font-semibold text-xs">
+                          {course.name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900 text-sm">{course.name}</p>
+                          <p className="text-xs text-gray-500">{course.code}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-900 text-sm">{course.name}</p>
-                        <p className="text-xs text-gray-500">{course.code}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-3 px-2 text-sm text-gray-600">{course.instructor}</td>
-                  <td className="py-3 px-2 text-center">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        togglePin(course.id);
-                      }}
-                      className="inline-flex items-center justify-center p-1.5 hover:bg-gray-200 rounded-lg transition-colors"
-                      aria-label={isPinned(course.id) ? 'Unpin course' : 'Pin course'}
-                    >
-                      <Pin
-                        className={`w-4 h-4 transition-colors ${isPinned(course.id) ? 'fill-blue-600 text-blue-600' : 'text-gray-400'
-                          }`}
-                      />
-                    </button>
+                    </td>
+                    <td className="py-3 px-2 text-sm text-gray-600">{course.instructor}</td>
+                    <td className="py-3 px-2 text-center">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          togglePin(course.id);
+                        }}
+                        className="inline-flex items-center justify-center p-1.5 hover:bg-gray-200 rounded-lg transition-colors"
+                        aria-label={isPinned(course.id) ? 'Unpin course' : 'Pin course'}
+                      >
+                        <Pin
+                          className={`w-4 h-4 transition-colors ${isPinned(course.id) ? 'fill-blue-600 text-blue-600' : 'text-gray-400'
+                            }`}
+                        />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={3} className="py-8 text-center text-gray-500 text-sm">
+                    {searchQuery ? `No courses found for "${searchQuery}"` : 'No courses available'}
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
