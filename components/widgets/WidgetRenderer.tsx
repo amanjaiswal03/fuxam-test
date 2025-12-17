@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Widget, WidgetType } from '@/types/widget';
 import { CourseSlider } from './CourseSlider';
 import { TodoList } from './TodoList';
@@ -9,6 +9,8 @@ import { Agenda } from './Agenda';
 import { LinkWidget } from './LinkWidget';
 import { RecentChats } from './RecentChats';
 import { ImageWidget } from './ImageWidget';
+import { WidgetSkeleton, CourseCardSkeleton, TableRowSkeleton, AgendaItemSkeleton, ChatItemSkeleton } from '../WidgetSkeleton';
+import { useDelayedData } from '@/hooks/useDelayedData';
 import {
   mockCourses,
   mockTasks,
@@ -41,67 +43,140 @@ export function WidgetRenderer({ widget, onDelete, onSettings, isEditMode = fals
 
   const courses = widget.config.showPinnedOnly ? getPinnedCourses() : mockCourses;
 
+  // Use delayed data to show loader
+  const delayedCourses = useDelayedData(courses, 800);
+  const delayedTasks = useDelayedData(mockTasks, 800);
+  const delayedAgenda = useDelayedData(mockAgenda, 800);
+  const delayedChats = useDelayedData(mockChats, 800);
+
+  // Helper to render skeleton based on widget type
+  const getSkeleton = () => {
+    switch (widget.type) {
+      case 'course-slider':
+        return (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <CourseCardSkeleton key={i} />
+            ))}
+          </div>
+        );
+      case 'course-table':
+        return (
+          <div className="space-y-4">
+            <div className="h-10 bg-gray-200 rounded animate-pulse" />
+            <table className="w-full">
+              <tbody>
+                {[...Array(3)].map((_, i) => (
+                  <TableRowSkeleton key={i} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      case 'agenda':
+        return (
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <AgendaItemSkeleton key={i} />
+            ))}
+          </div>
+        );
+      case 'recent-chats':
+        return (
+          <div className="space-y-2">
+            {[...Array(4)].map((_, i) => (
+              <ChatItemSkeleton key={i} />
+            ))}
+          </div>
+        );
+      default:
+        return <WidgetSkeleton />;
+    }
+  };
+
   switch (widget.type) {
     case 'course-slider':
-      return (
+      return delayedCourses ? (
         <CourseSlider
-          courses={courses}
+          courses={delayedCourses}
           onDelete={isEditMode ? handleDelete : undefined}
           onSettings={isEditMode ? handleSettings : undefined}
           showPinnedOnly={widget.config.showPinnedOnly}
           isEditMode={isEditMode}
         />
+      ) : (
+        getSkeleton()
       );
 
     case 'todo-list':
-      return <TodoList tasks={getTasksByStatus('pending')} onDelete={isEditMode ? handleDelete : undefined} />;
+      return delayedTasks ? (
+        <TodoList tasks={getTasksByStatus('pending')} onDelete={isEditMode ? handleDelete : undefined} />
+      ) : (
+        getSkeleton()
+      );
 
     case 'course-table':
-      return (
+      return delayedCourses ? (
         <CourseTable
-          courses={courses}
+          courses={delayedCourses}
           onDelete={isEditMode ? handleDelete : undefined}
           onSettings={isEditMode ? handleSettings : undefined}
           showPinnedOnly={widget.config.showPinnedOnly}
           isEditMode={isEditMode}
         />
+      ) : (
+        getSkeleton()
       );
 
     case 'in-progress-tasks':
-      return (
+      return delayedTasks ? (
         <TaskWidget
           title="In Progress Tasks"
           tasks={getTasksByStatus('in-progress')}
           type="in-progress"
           onDelete={isEditMode ? handleDelete : undefined}
         />
+      ) : (
+        getSkeleton()
       );
 
     case 'recently-completed-tasks':
-      return (
+      return delayedTasks ? (
         <TaskWidget
           title="Recently Completed"
           tasks={getTasksByStatus('completed')}
           type="completed"
           onDelete={isEditMode ? handleDelete : undefined}
         />
+      ) : (
+        getSkeleton()
       );
 
     case 'reviewed-tasks':
-      return (
+      return delayedTasks ? (
         <TaskWidget
           title="Reviewed Tasks"
           tasks={getTasksByStatus('reviewed')}
           type="reviewed"
           onDelete={isEditMode ? handleDelete : undefined}
         />
+      ) : (
+        getSkeleton()
       );
 
     case 'completed-task-insights':
-      return <TaskInsights tasks={mockTasks} onDelete={isEditMode ? handleDelete : undefined} />;
+      return delayedTasks ? (
+        <TaskInsights tasks={delayedTasks} onDelete={isEditMode ? handleDelete : undefined} />
+      ) : (
+        getSkeleton()
+      );
 
     case 'agenda':
-      return <Agenda events={getUpcomingAgenda()} onDelete={isEditMode ? handleDelete : undefined} />;
+      return delayedAgenda ? (
+        <Agenda events={delayedAgenda} onDelete={isEditMode ? handleDelete : undefined} />
+      ) : (
+        getSkeleton()
+      );
 
     case 'link-users':
       return (
@@ -181,7 +256,11 @@ export function WidgetRenderer({ widget, onDelete, onSettings, isEditMode = fals
       );
 
     case 'recent-chats':
-      return <RecentChats chats={mockChats} onDelete={isEditMode ? handleDelete : undefined} />;
+      return delayedChats ? (
+        <RecentChats chats={delayedChats} onDelete={isEditMode ? handleDelete : undefined} />
+      ) : (
+        getSkeleton()
+      );
 
     case 'image-widget':
       return (

@@ -1,179 +1,210 @@
-# Fuxam Dashboard - Student LMS
+# Student Learning Management System - Dashboard MVP
 
-A modern, customizable dashboard for student learning management built with Next.js 15, TypeScript, and Tailwind CSS.
+A modern, interactive dashboard for a student learning management system built with **Next.js**, **React**, and **TypeScript**.
 
-## Features
+## 🚀 Features
 
-### ✨ Core Features
-- **Drag-and-Drop Interface**: Fully adjustable widget positioning using react-grid-layout
-- **Widget Library**: Comprehensive library of 18+ widgets organized by category
-- **Customizable Widgets**: Configure widget size and settings (e.g., show pinned courses only)
-- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
-- **Persistent State**: Dashboard layout automatically saves to localStorage
-- **Modern UI**: Clean, professional design with smooth animations
+### Dashboard
+- **Customizable Widgets**: Drag-and-drop widgets to arrange your dashboard
+- **Edit/View Modes**: Switch between edit mode (modify layout) and view mode (read-only)
+- **Persistent Layout**: Dashboard layout is automatically saved to localStorage
+- **Loading Skeletons**: Beautiful loading animations for each widget
+- **Responsive Design**: Works seamlessly on desktop and tablet devices
 
-### 📦 Available Widgets
+### Widgets Available
 
-#### Course Widgets
-- **Course Slider**: Visual grid of course cards with progress tracking
-- **Todo List**: Pending tasks with priority indicators
-- **Course Table**: Searchable table view of all courses
-- **In Progress Tasks**: Track actively worked on tasks
-- **Recently Completed Tasks**: View completed assignments
-- **Reviewed Tasks**: Tasks that have been reviewed
-- **Completed Task Insights**: Analytics dashboard for task completion
+**Course Management**
+- **Course Slider**: Browse courses with progress tracking and pinning
+- **Course Table**: View courses in table format with pinning capabilities
+- **Pinned Courses**: Quick access to your favorite courses
 
-#### Calendar Widgets
-- **Agenda**: Upcoming events grouped by date with time and location
+**Tasks & Planning**
+- **Todo List**: Manage pending tasks
+- **In Progress Tasks**: Track currently active tasks
+- **Recently Completed Tasks**: View recently finished items
+- **Reviewed Tasks**: See tasks that have been reviewed
+- **Task Insights**: Analytics on completed tasks
 
-#### Management Widgets (Quick Links)
-- **Users**: User management portal
-- **Groups**: Group management
-- **Terms**: Academic term management
-- **Modules**: Course module management
-- **Curricula**: Curriculum management
-- **Study Plans**: Student study planning
-- **SmartPlan**: AI-powered planning tools
+**Calendar & Communication**
+- **Agenda**: View upcoming events and deadlines
+- **Recent Chats**: Quick access to recent conversations
 
-#### Communication Widgets
-- **Recent Chats**: View and access recent conversations
+**Management Links**
+- Users, Groups, Terms, Modules, Curricula, Study Plans, SmartPlan
 
-#### General Widgets
-- **Image Widget**: Display custom images with configurable URL
+**Customization**
+- **Image Widget**: Add custom images to your dashboard
 
-## Getting Started
+### Advanced Features
+- **Pin Courses**: Pin/unpin courses for quick access
+- **Widget Configuration**: Customize widget settings (e.g., show pinned courses only)
+- **Confirmation Dialogs**: Professional dialogs for destructive actions
+- **Widget Library**: Browse and add widgets from a modal library
+- **All Categories View**: See all available widgets at once
 
-### Prerequisites
-- Node.js 18+ and npm/yarn/pnpm
+## 📋 Prerequisites
 
-### Installation
+- **Node.js**: Version 18.17 or later
+- **npm** or **yarn**: Package manager
+
+## 🛠️ Installation
+
+1. **Clone or navigate to the project directory**
+   ```bash
+   cd /Users/amanjaiswal/Desktop/Projects/fuxam-test
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+
+## 🚀 Starting the Application
+
+### Development Server
+
+Run the development server:
 
 ```bash
-# Install dependencies
-npm install
-
-# Run development server
 npm run dev
+# or
+yarn dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the dashboard.
+The application will start at **http://localhost:3000**
 
-### Build for Production
+Open [http://localhost:3000](http://localhost:3000) in your browser to see the dashboard.
+
+### Production Build
+
+Build for production:
 
 ```bash
 npm run build
-npm start
+# or
+yarn build
 ```
 
-## Usage
+Start the production server:
 
-### Adding Widgets
-1. Click the "Add Widget" button in the top right
-2. Browse or search for widgets in the library
-3. Select a widget to see its preview and configuration options
-4. Choose your desired size (1×1, 2×2, 3×1, 3×2, 4×1, 4×2, 6×1, 6×2)
-5. Configure settings if available (e.g., "Show pinned courses only")
-6. Click "Add to Dashboard"
+```bash
+npm start
+# or
+yarn start
+```
 
-### Arranging Widgets
-- **Move**: Click and drag the widget header (with grip icon) to reposition
-- **Resize**: Drag the bottom-right corner of any widget to resize
-- **Delete**: Click the trash icon in the widget header
+## 📖 How to Use
 
-### Resetting Dashboard
-Click the "Reset" button to restore the default widget layout.
+### Viewing the Dashboard
+1. Open the app at `http://localhost:3000`
+2. Browse your widgets and information in **View Mode** (default)
 
-## Project Structure
+### Editing the Dashboard
+
+1. **Enter Edit Mode**: Click the **"Edit Dashboard"** button in the top-right
+2. **Rearrange Widgets**: Click and drag widgets to reposition them
+3. **Resize Widgets**: Use the blue resize handle in the bottom-right corner of widgets
+4. **Delete Widgets**: Click the trash icon in the widget header
+5. **Add Widgets**: Click **"Add Widget"** to open the widget library
+6. **Exit Edit Mode**: Click **"Save & Exit"** to save changes and return to view mode
+
+### Widget Library
+
+1. Click **"Add Widget"** in edit mode
+2. **Browse Categories**: Select from Course, Calendar, Management, Chat, General, or **All**
+3. **Search Widgets**: Use the search bar to find specific widgets
+4. **Configure Widget**: 
+   - Select desired size
+   - Configure settings (if available)
+5. **Add to Dashboard**: Click **"Add to Dashboard"** button
+6. **Close Modal**: Click outside the modal or the backdrop
+
+### Pinning Courses
+
+1. In **Course Slider** or **Course Table** widgets, click the pin icon on any course
+2. Pinned courses appear in the **Pinned Courses** widget
+3. Use the **"Pinned only"** toggle in edit mode to filter widgets
+
+### Resetting the Dashboard
+
+1. Enter **Edit Mode**
+2. Click **"Reset"** button
+3. Confirm the action in the dialog
+4. Dashboard returns to default widgets
+
+## 🎨 Customization
+
+### Widget Settings
+
+Some widgets offer configuration options:
+
+- **Course Widgets**: Toggle "Show pinned courses only" setting
+- **Image Widget**: Add custom image URL
+
+
+
+## 📁 Project Structure
 
 ```
 fuxam-test/
-├── app/                    # Next.js app router
-│   ├── layout.tsx         # Root layout
-│   ├── page.tsx           # Homepage (Dashboard)
-│   └── globals.css        # Global styles
-├── components/            # React components
-│   ├── Dashboard.tsx      # Main dashboard component
-│   ├── WidgetLibrary.tsx  # Widget library modal
-│   └── widgets/           # Widget components
-│       ├── BaseWidget.tsx
+├── app/
+│   ├── globals.css          # Global styles and react-grid-layout customizations
+│   ├── layout.tsx           # Root layout with providers
+│   ├── page.tsx             # Main page component
+│   └── page.tsx             # Page component
+├── components/
+│   ├── Dashboard.tsx        # Main dashboard component
+│   ├── WidgetLibrary.tsx    # Widget selection modal
+│   ├── WidgetLoader.tsx     # Loading indicator
+│   ├── WidgetSkeleton.tsx   # Loading skeletons for each widget type
+│   ├── ConfirmationDialog.tsx # Reusable confirmation dialog
+│   └── widgets/             # Individual widget components
+│       ├── BaseWidget.tsx   # Wrapper for all widgets
 │       ├── CourseSlider.tsx
-│       ├── TodoList.tsx
-│       ├── Agenda.tsx
-│       └── ...
-├── lib/                   # Utility functions
-│   ├── mock-data.ts       # Mock data for widgets
-│   ├── utils.ts           # Helper functions
-│   └── widget-definitions.ts  # Widget metadata
-├── types/                 # TypeScript types
-│   └── widget.ts          # Widget type definitions
-└── package.json
+│       ├── CourseTable.tsx
+│       └── ... (other widgets)
+├── hooks/
+│   └── useDelayedData.ts    # Custom hook for delayed data loading
+├── context/
+│   └── CoursesContext.tsx   # Global context for course pinning
+├── lib/
+│   ├── mock-data.ts         # Mock data for all widgets
+│   ├── widget-definitions.ts # Widget metadata and configuration
+│   └── utils.ts             # Utility functions
+└── types/
+    └── widget.ts            # TypeScript type definitions
 ```
 
-## Technology Stack
+## 🔧 Technologies Used
 
-- **Framework**: Next.js 15 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Drag & Drop**: react-grid-layout
-- **Icons**: Lucide React
-- **State Management**: React Hooks + localStorage
+- **Next.js 14**: React framework with App Router
+- **React 18**: UI library
+- **TypeScript**: Type-safe development
+- **Tailwind CSS**: Utility-first CSS framework
+- **react-grid-layout**: Drag-and-drop grid layout
+- **lucide-react**: Beautiful SVG icons
+- **LocalStorage API**: Persist dashboard layout
 
-## Customization
+## 💾 Data Persistence
 
-### Adding New Widgets
+- **Dashboard Layout**: Saved to localStorage
+- **Widget Configuration**: Saved with layout
+- **Pinned Courses**: Stored in CoursesContext and localStorage
+- **All data is restored on page reload**
 
-1. **Create the widget component** in `components/widgets/`:
-```typescript
-export function MyWidget({ onDelete }: { onDelete?: () => void }) {
-  return (
-    <BaseWidget title="My Widget" onDelete={onDelete}>
-      {/* Your widget content */}
-    </BaseWidget>
-  );
-}
-```
+## ⚙️ Available Scripts
 
-2. **Define widget metadata** in `lib/widget-definitions.ts`:
-```typescript
-'my-widget': {
-  type: 'my-widget',
-  category: 'general',
-  title: 'My Widget',
-  description: 'Description of my widget',
-  icon: 'Star',
-  defaultSize: '2x2',
-  availableSizes: ['1x1', '2x2', '3x2'],
-  hasSettings: false,
-}
-```
+In the project directory, you can run:
 
-3. **Add to widget renderer** in `components/widgets/WidgetRenderer.tsx`:
-```typescript
-case 'my-widget':
-  return <MyWidget onDelete={handleDelete} />;
-```
+- `npm run dev` - Start development server
+- `npm run build` - Create production build
+- `npm start` - Start production server
+- `npm run lint` - Run ESLint
 
-### Styling
 
-Tailwind configuration is in `tailwind.config.ts`. The color palette uses blue as the primary color, which can be customized:
 
-```typescript
-colors: {
-  primary: {
-    // Your color scale
-  },
-}
-```
 
-## Data Integration
 
-Currently uses mock data from `lib/mock-data.ts`. To integrate with real APIs:
-
-1. Replace mock data imports in `components/widgets/WidgetRenderer.tsx`
-2. Add API calls using fetch or your preferred data fetching library
-3. Consider adding a state management solution (Redux, Zustand, etc.) for complex data flows
-
-## License
-
-MIT
 
