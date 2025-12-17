@@ -52,8 +52,8 @@ export function TodoList({ tasks, onDelete }: TodoListProps) {
               <div
                 key={task.id}
                 className={`p-3 rounded-lg border transition-all cursor-pointer ${isChecked
-                    ? 'bg-gray-100 border-gray-300 opacity-60'
-                    : 'bg-gray-50 border-gray-200 hover:border-blue-300'
+                  ? 'bg-gray-100 border-gray-300 opacity-60'
+                  : 'bg-gray-50 border-gray-200 hover:border-blue-300'
                   }`}
                 onClick={() => toggleTask(task.id)}
               >
@@ -75,8 +75,8 @@ export function TodoList({ tasks, onDelete }: TodoListProps) {
                   <div className="flex-1 min-w-0">
                     <h4
                       className={`font-medium text-sm mb-1 transition-all ${isChecked
-                          ? 'text-gray-500 line-through'
-                          : 'text-gray-900'
+                        ? 'text-gray-500 line-through'
+                        : 'text-gray-900'
                         }`}
                     >
                       {task.title}

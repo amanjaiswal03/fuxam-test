@@ -1,5 +1,5 @@
-import React, { Suspense } from 'react';
-import { Widget, WidgetType } from '@/types/widget';
+import React from 'react';
+import { Widget } from '@/types/widget';
 import { CourseSlider } from './CourseSlider';
 import { TodoList } from './TodoList';
 import { CourseTable } from './CourseTable';
@@ -16,9 +16,7 @@ import {
   mockTasks,
   mockAgenda,
   mockChats,
-  getPinnedCourses,
   getTasksByStatus,
-  getUpcomingAgenda,
 } from '@/lib/mock-data';
 import {
   Users,

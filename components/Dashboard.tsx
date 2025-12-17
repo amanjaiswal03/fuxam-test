@@ -359,7 +359,7 @@ export function Dashboard() {
                             <LayoutGrid className="w-10 h-10 text-gray-400" />
                         </div>
                         <h3 className="text-xl font-semibold text-gray-900 mb-2">No Widgets Yet</h3>
-                        <p className="text-gray-600 mb-6">Click "Edit Dashboard" to start adding widgets</p>
+                        <p className="text-gray-600 mb-6">Click Edit Dashboard to start adding widgets</p>
                     </div>
                 ) : widgets.length === 0 ? (
                     <div className="text-center py-20">

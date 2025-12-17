@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { X, Search, Plus, Check } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Plus, Check } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { WidgetType, WidgetSize, WidgetConfig, Widget } from '@/types/widget';
 import { widgetDefinitions, getAllCategories } from '@/lib/widget-definitions';
@@ -25,7 +25,7 @@ export function WidgetLibrary({ isOpen, onClose, onAddWidget, existingWidgets }:
     const categories = getAllCategories();
 
     // Prevent body scroll when modal is open
-    React.useEffect(() => {
+    useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden';
         } else {

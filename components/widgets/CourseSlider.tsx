@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { BaseWidget } from './BaseWidget';
-import { Course, mockCourses } from '@/lib/mock-data';
+import { Course } from '@/lib/mock-data';
 import { BookOpen, TrendingUp, Pin } from 'lucide-react';
 import { useCoursesContext } from '@/context/CoursesContext';
 
@@ -20,8 +20,8 @@ export function CourseSlider({ courses, onDelete, onSettings, showPinnedOnly = f
 
   // Filter courses based on pinned status
   const displayCourses = localShowPinned
-    ? mockCourses.filter((course) => isPinned(course.id))
-    : mockCourses;
+    ? courses.filter((course) => isPinned(course.id))
+    : courses;
 
   return (
     <BaseWidget title="Your Courses (Slider)" onDelete={onDelete} onSettings={onSettings}>
