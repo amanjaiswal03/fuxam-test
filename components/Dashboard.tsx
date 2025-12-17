@@ -175,6 +175,38 @@ export function Dashboard() {
         setIsEditMode(false);
     };
 
+    const handleAutoLayout = () => {
+        // Sort widgets by current position (top-to-bottom, left-to-right)
+        const sortedLayouts = [...layouts.lg].sort((a, b) => {
+            if (a.y !== b.y) return a.y - b.y;
+            return a.x - b.x;
+        });
+
+        // Reposition widgets vertically stacked, filling left to right
+        let currentY = 0;
+        let currentX = 0;
+        const newLayouts: RGLLayout[] = [];
+
+        sortedLayouts.forEach((layout) => {
+            // Check if adding this widget would exceed column width
+            if (currentX + layout.w > 12) {
+                // Move to next row
+                currentX = 0;
+                currentY += Math.max(...newLayouts.filter(l => l.y === currentY - Math.max(...newLayouts.map(l => l.h))).map(l => l.h) || [1]);
+            }
+
+            newLayouts.push({
+                ...layout,
+                x: currentX,
+                y: currentY,
+            });
+
+            currentX += layout.w;
+        });
+
+        setLayouts({ lg: newLayouts });
+    };
+
     if (!mounted) {
         return null; // Avoid hydration mismatch
     }
@@ -252,10 +284,10 @@ export function Dashboard() {
                         ) : (
                             <>
                                 <button
-                                    onClick={handleResetDashboard}
+                                    onClick={handleAutoLayout}
                                     className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
                                 >
-                                    Reset
+                                    Auto Layout
                                 </button>
                                 <button
                                     onClick={handleOpenLibrary}
