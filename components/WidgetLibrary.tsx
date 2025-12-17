@@ -53,6 +53,18 @@ export function WidgetLibrary({ isOpen, onClose, onAddWidget, existingWidgets }:
         setConfig({});
     };
 
+    const handleQuickAddWidget = async (type: WidgetType) => {
+        const definition = widgetDefinitions[type];
+        const isAdded = isWidgetAdded(type);
+
+        if (!isAdded) {
+            setIsAddingWidget(true);
+            await new Promise(resolve => setTimeout(resolve, 600));
+            onAddWidget(type, definition.defaultSize, {});
+            setIsAddingWidget(false);
+        }
+    };
+
     const handleAddWidget = async () => {
         if (selectedWidget && !isSelectedWidgetAdded) {
             setIsAddingWidget(true);
@@ -92,9 +104,9 @@ export function WidgetLibrary({ isOpen, onClose, onAddWidget, existingWidgets }:
                 {/* Main Content Area */}
                 <div className="flex-1 overflow-hidden flex">
                     {/* Left Column - Categories and Widgets Grid */}
-                    <div className="w-[500px] border-r border-gray-200 flex flex-col overflow-hidden">
+                    <div className="w-full sm:w-[500px] sm:border-r border-gray-200 flex flex-col overflow-hidden">
                         {/* Search Bar */}
-                        <div className="px-6 py-4 border-b border-gray-200 flex-shrink-0">
+                        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex-shrink-0">
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                 <input
@@ -108,7 +120,7 @@ export function WidgetLibrary({ isOpen, onClose, onAddWidget, existingWidgets }:
                         </div>
 
                         {/* Category Tabs */}
-                        <div className="px-6 py-3 border-b border-gray-200 flex-shrink-0 overflow-x-auto">
+                        <div className="px-4 sm:px-6 py-2 sm:py-3 border-b border-gray-200 flex-shrink-0 overflow-x-auto">
                             <div className="flex gap-2">
                                 {/* All Category */}
                                 <button
@@ -142,34 +154,70 @@ export function WidgetLibrary({ isOpen, onClose, onAddWidget, existingWidgets }:
                         </div>
 
                         {/* Widgets Grid - 2x2 */}
-                        <div className="flex-1 overflow-y-auto px-6 py-4">
-                            <h3 className="text-sm font-semibold text-gray-900 mb-3">Available widgets</h3>
+                        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-3 sm:py-4">
+                            <h3 className="text-xs sm:text-sm font-semibold text-gray-900 mb-2 sm:mb-3">Available widgets</h3>
                             {filteredWidgets.length > 0 ? (
                                 <div className="grid grid-cols-2 gap-2">
                                     {filteredWidgets.map((widget) => {
                                         const isAdded = isWidgetAdded(widget.type);
                                         return (
-                                            <button
-                                                key={widget.type}
-                                                onClick={() => handleSelectWidget(widget.type)}
-                                                className={cn(
-                                                    'p-3 rounded-lg border-2 transition-all text-left flex flex-col items-start',
-                                                    selectedWidget === widget.type
-                                                        ? 'border-blue-600 bg-blue-50'
-                                                        : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
-                                                )}
-                                            >
-                                                <div className="flex items-start justify-between w-full mb-1.5">
-                                                    <div className="text-blue-600 flex-shrink-0">
-                                                        {getIcon(widget.icon)}
-                                                    </div>
-                                                    {isAdded && (
-                                                        <Check className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
+                                            <div key={widget.type} className="relative">
+                                                {/* Desktop: Clickable card for selection */}
+                                                <button
+                                                    onClick={() => handleSelectWidget(widget.type)}
+                                                    className={cn(
+                                                        'w-full p-3 rounded-lg border-2 transition-all text-left flex flex-col items-start',
+                                                        'hidden sm:flex',
+                                                        selectedWidget === widget.type
+                                                            ? 'border-blue-600 bg-blue-50'
+                                                            : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
                                                     )}
+                                                >
+                                                    <div className="flex items-start justify-between w-full mb-1.5">
+                                                        <div className="text-blue-600 flex-shrink-0">
+                                                            {getIcon(widget.icon)}
+                                                        </div>
+                                                        {isAdded && (
+                                                            <Check className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
+                                                        )}
+                                                    </div>
+                                                    <p className="text-xs font-semibold text-gray-900 line-clamp-1">{widget.title}</p>
+                                                    <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{widget.description}</p>
+                                                </button>
+
+                                                {/* Mobile: Card with Add button */}
+                                                <div
+                                                    className={cn(
+                                                        'sm:hidden p-3 rounded-lg border-2 transition-all flex flex-col items-start',
+                                                        isAdded
+                                                            ? 'border-green-200 bg-green-50'
+                                                            : 'border-gray-200 bg-white'
+                                                    )}
+                                                >
+                                                    <div className="flex items-start justify-between w-full mb-1.5">
+                                                        <div className="text-blue-600 flex-shrink-0">
+                                                            {getIcon(widget.icon)}
+                                                        </div>
+                                                        {isAdded && (
+                                                            <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                                                        )}
+                                                    </div>
+                                                    <p className="text-xs font-semibold text-gray-900 line-clamp-1 mb-1">{widget.title}</p>
+                                                    <p className="text-xs text-gray-500 mb-2 line-clamp-1">{widget.description}</p>
+                                                    <button
+                                                        onClick={() => handleQuickAddWidget(widget.type)}
+                                                        disabled={isAdded || isAddingWidget}
+                                                        className={cn(
+                                                            'w-full px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+                                                            isAdded
+                                                                ? 'bg-green-100 text-green-700 cursor-not-allowed'
+                                                                : 'bg-blue-600 text-white hover:bg-blue-700'
+                                                        )}
+                                                    >
+                                                        {isAdded ? 'Added' : 'Add'}
+                                                    </button>
                                                 </div>
-                                                <p className="text-xs font-semibold text-gray-900 line-clamp-1">{widget.title}</p>
-                                                <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{widget.description}</p>
-                                            </button>
+                                            </div>
                                         );
                                     })}
                                 </div>
@@ -182,8 +230,8 @@ export function WidgetLibrary({ isOpen, onClose, onAddWidget, existingWidgets }:
                         </div>
                     </div>
 
-                    {/* Right Column - Preview and Configuration */}
-                    <div className="flex-1 flex flex-col overflow-y-auto p-6">
+                    {/* Right Column - Preview and Configuration (Desktop Only) */}
+                    <div className="hidden sm:flex flex-1 flex-col overflow-y-auto p-6">
                         {selectedDefinition ? (
                             <div className="space-y-4">
                                 {/* Preview Card - Fixed Size */}

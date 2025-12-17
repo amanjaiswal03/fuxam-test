@@ -215,13 +215,13 @@ export function Dashboard() {
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
             <header className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
-                <div className="px-6 pt-12">
+                <div className="px-4 sm:px-6 pt-6 sm:pt-12">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900">Good Morning, Leo</h1>
-                            <p className="text-sm text-gray-600 mt-0.5">Welcome back to your dashboard</p>
+                            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Good Morning, Leo</h1>
+                            <p className="text-xs sm:text-sm text-gray-600 mt-0.5">Welcome back to your dashboard</p>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 sm:gap-3">
                             <div className="relative hidden md:block">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                 <input
@@ -234,21 +234,21 @@ export function Dashboard() {
                                 className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
                                 aria-label="Notifications"
                             >
-                                <Bell className="w-5 h-5 text-gray-600" />
+                                <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
                                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                             </button>
                             <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors" aria-label="Profile">
-                                <User className="w-5 h-5 text-gray-600" />
+                                <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
                             </button>
                         </div>
                     </div>
 
                     {/* Navigation Tabs */}
-                    <nav className="flex gap-6 mt-4 border-b border-gray-200 -mb-px">
+                    <nav className="flex gap-3 sm:gap-6 mt-3 sm:mt-4 border-b border-gray-200 -mb-px overflow-x-auto">
                         {['Dashboard', 'My Curriculum', 'Documents', 'Attendance', 'Invoices', 'Availability'].map((tab) => (
                             <button
                                 key={tab}
-                                className={`pb-3 text-sm font-medium transition-colors relative ${tab === 'Dashboard'
+                                className={`pb-2 sm:pb-3 text-xs sm:text-sm font-medium transition-colors relative whitespace-nowrap ${tab === 'Dashboard'
                                     ? 'text-blue-600 border-b-2 border-blue-600'
                                     : 'text-gray-600 hover:text-gray-900'
                                     }`}
@@ -263,21 +263,21 @@ export function Dashboard() {
 
 
             {/* Dashboard Grid */}
-            <div className="px-6 py-6 overflow-x-hidden">
+            <div className="px-4 sm:px-6 py-4 sm:py-6 overflow-x-hidden">
                 {/* Dashboard Action Buttons */}
-                <div className="mb-6 flex justify-between items-center">
+                <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     {isEditMode && (
-                        <div className="px-4 py-2 rounded-lg border border-blue-300 bg-blue-50">
-                            <p className="text-sm text-blue-800 font-medium">
-                                ✏️ Edit mode enabled • Drag header to reposition • Use the blue handle to resize • Click delete to remove widgets
+                        <div className="px-3 sm:px-4 py-2 rounded-lg border border-blue-300 bg-blue-50 w-full sm:w-auto">
+                            <p className="text-xs sm:text-sm text-blue-800 font-medium">
+                                ✏️ Edit mode enabled • Drag to reposition • Resize • Delete
                             </p>
                         </div>
                     )}
-                    <div className={`flex ${!isEditMode ? 'justify-end w-full' : 'justify-end gap-3'} gap-3`}>
+                    <div className={`flex ${!isEditMode ? 'justify-end w-full' : 'justify-end gap-2 sm:gap-3'} gap-2 sm:gap-3 flex-wrap`}>
                         {!isEditMode ? (
                             <button
                                 onClick={() => setIsEditMode(true)}
-                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                                className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
                             >
                                 Edit Dashboard
                             </button>
@@ -285,20 +285,20 @@ export function Dashboard() {
                             <>
                                 <button
                                     onClick={handleAutoLayout}
-                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors whitespace-nowrap"
                                 >
                                     Auto Layout
                                 </button>
                                 <button
                                     onClick={handleOpenLibrary}
-                                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-2"
+                                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-1 sm:gap-2 whitespace-nowrap"
                                 >
-                                    <Plus className="w-4 h-4" />
+                                    <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                                     Add Widget
                                 </button>
                                 <button
                                     onClick={handleSaveAndExitEdit}
-                                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+                                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors whitespace-nowrap"
                                 >
                                     Save
                                 </button>
