@@ -190,56 +190,24 @@ export function Dashboard() {
                             <p className="text-sm text-gray-600 mt-0.5">Welcome back to your dashboard</p>
                         </div>
                         <div className="flex items-center gap-3">
-                            {isEditMode ? (
-                                <>
-                                    <button
-                                        onClick={handleResetDashboard}
-                                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                                    >
-                                        Reset
-                                    </button>
-                                    <button
-                                        onClick={handleOpenLibrary}
-                                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center gap-2"
-                                    >
-                                        <Plus className="w-4 h-4" />
-                                        Add Widget
-                                    </button>
-                                    <button
-                                        onClick={handleSaveAndExitEdit}
-                                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
-                                    >
-                                        Save
-                                    </button>
-                                </>
-                            ) : (
-                                <>
-                                    <div className="relative hidden md:block">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                        <input
-                                            type="text"
-                                            placeholder="Search..."
-                                            className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-64"
-                                        />
-                                    </div>
-                                    <button
-                                        className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                                        aria-label="Notifications"
-                                    >
-                                        <Bell className="w-5 h-5 text-gray-600" />
-                                        <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                                    </button>
-                                    <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors" aria-label="Profile">
-                                        <User className="w-5 h-5 text-gray-600" />
-                                    </button>
-                                    <button
-                                        onClick={() => setIsEditMode(true)}
-                                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
-                                    >
-                                        Edit Dashboard
-                                    </button>
-                                </>
-                            )}
+                            <div className="relative hidden md:block">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Search..."
+                                    className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-64"
+                                />
+                            </div>
+                            <button
+                                className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                aria-label="Notifications"
+                            >
+                                <Bell className="w-5 h-5 text-gray-600" />
+                                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                            </button>
+                            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors" aria-label="Profile">
+                                <User className="w-5 h-5 text-gray-600" />
+                            </button>
                         </div>
                     </div>
 
@@ -261,8 +229,52 @@ export function Dashboard() {
             </header>
 
 
+
             {/* Dashboard Grid */}
             <div className="px-6 py-6 overflow-x-hidden">
+                {/* Dashboard Action Buttons */}
+                <div className="mb-6 flex justify-between items-center">
+                    {isEditMode && (
+                        <div className="px-4 py-2 rounded-lg border border-blue-300 bg-blue-50">
+                            <p className="text-sm text-blue-800 font-medium">
+                                ✏️ Edit mode enabled • Drag header to reposition • Use the blue handle to resize • Click delete to remove widgets
+                            </p>
+                        </div>
+                    )}
+                    <div className={`flex ${!isEditMode ? 'justify-end w-full' : 'justify-end gap-3'} gap-3`}>
+                        {!isEditMode ? (
+                            <button
+                                onClick={() => setIsEditMode(true)}
+                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                            >
+                                Edit Dashboard
+                            </button>
+                        ) : (
+                            <>
+                                <button
+                                    onClick={handleResetDashboard}
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                                >
+                                    Reset
+                                </button>
+                                <button
+                                    onClick={handleOpenLibrary}
+                                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-2"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    Add Widget
+                                </button>
+                                <button
+                                    onClick={handleSaveAndExitEdit}
+                                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+                                >
+                                    Save
+                                </button>
+                            </>
+                        )}
+                    </div>
+                </div>
+
                 {!isEditMode && widgets.length === 0 ? (
                     <div className="text-center py-20">
                         <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">

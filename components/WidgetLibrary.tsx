@@ -60,8 +60,6 @@ export function WidgetLibrary({ isOpen, onClose, onAddWidget, existingWidgets }:
             await new Promise(resolve => setTimeout(resolve, 600));
             onAddWidget(selectedWidget, selectedSize, config);
             setIsAddingWidget(false);
-            // Keep widget selected, button will update to show "Already Added"
-            // Don't reset selection or config
         }
     };
 
@@ -87,16 +85,16 @@ export function WidgetLibrary({ isOpen, onClose, onAddWidget, existingWidgets }:
             onClick={onClose}
         >
             <div
-                className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col"
+                className="bg-white rounded-2xl shadow-2xl w-full max-w-7xl h-[85vh] flex flex-col"
                 onClick={(e) => e.stopPropagation()}
             >
 
-                {/* Content */}
+                {/* Main Content Area */}
                 <div className="flex-1 overflow-hidden flex">
-                    {/* Left Sidebar - Categories and Widget List */}
-                    <div className="w-80 border-r border-gray-200 flex flex-col bg-white">
+                    {/* Left Column - Categories and Widgets Grid */}
+                    <div className="w-[500px] border-r border-gray-200 flex flex-col overflow-hidden">
                         {/* Search Bar */}
-                        <div className="p-4 border-b border-gray-200">
+                        <div className="px-6 py-4 border-b border-gray-200 flex-shrink-0">
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                 <input
@@ -110,104 +108,88 @@ export function WidgetLibrary({ isOpen, onClose, onAddWidget, existingWidgets }:
                         </div>
 
                         {/* Category Tabs */}
-                        <div className="border-b border-gray-200 flex-shrink-0">
-                            <div className="flex flex-col">
-                                {/* All Widgets Button */}
+                        <div className="px-6 py-3 border-b border-gray-200 flex-shrink-0 overflow-x-auto">
+                            <div className="flex gap-2">
+                                {/* All Category */}
                                 <button
                                     onClick={() => setSelectedCategory('All')}
                                     className={cn(
-                                        'px-4 py-3 text-sm font-medium transition-colors text-left border-l-4 flex items-center justify-between',
+                                        'px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap flex-shrink-0',
                                         selectedCategory.toLowerCase() === 'all'
-                                            ? 'bg-blue-50 text-blue-700 border-blue-600'
-                                            : 'border-transparent text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                     )}
                                 >
-                                    <span>All</span>
-                                    <span className={cn(
-                                        'text-xs px-2 py-0.5 rounded-full',
-                                        selectedCategory.toLowerCase() === 'all'
-                                            ? 'bg-blue-100 text-blue-700'
-                                            : 'bg-gray-100 text-gray-600'
-                                    )}>
-                                        {Object.values(widgetDefinitions).length}
-                                    </span>
+                                    All
                                 </button>
 
-                                {categories.map((category) => {
-                                    const categoryWidgets = Object.values(widgetDefinitions).filter(
-                                        (w) => w.category.toLowerCase() === category.toLowerCase()
-                                    );
-                                    return (
-                                        <button
-                                            key={category}
-                                            onClick={() => setSelectedCategory(category)}
-                                            className={cn(
-                                                'px-4 py-3 text-sm font-medium transition-colors text-left border-l-4 flex items-center justify-between',
-                                                selectedCategory.toLowerCase() === category.toLowerCase()
-                                                    ? 'bg-blue-50 text-blue-700 border-blue-600'
-                                                    : 'border-transparent text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                                            )}
-                                        >
-                                            <span>{category.charAt(0).toUpperCase() + category.slice(1)}</span>
-                                            <span className={cn(
-                                                'text-xs px-2 py-0.5 rounded-full',
-                                                selectedCategory.toLowerCase() === category.toLowerCase()
-                                                    ? 'bg-blue-100 text-blue-700'
-                                                    : 'bg-gray-100 text-gray-600'
-                                            )}>
-                                                {categoryWidgets.length}
-                                            </span>
-                                        </button>
-                                    );
-                                })}
+                                {/* Category Pills */}
+                                {categories.map((category) => (
+                                    <button
+                                        key={category}
+                                        onClick={() => setSelectedCategory(category)}
+                                        className={cn(
+                                            'px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap flex-shrink-0',
+                                            selectedCategory.toLowerCase() === category.toLowerCase()
+                                                ? 'bg-blue-600 text-white'
+                                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                        )}
+                                    >
+                                        {category.charAt(0).toUpperCase() + category.slice(1)}
+                                    </button>
+                                ))}
                             </div>
                         </div>
 
-                        {/* Widget List */}
-                        <div className="flex-1 overflow-y-auto p-4">
+                        {/* Widgets Grid - 2x2 */}
+                        <div className="flex-1 overflow-y-auto px-6 py-4">
                             <h3 className="text-sm font-semibold text-gray-900 mb-3">Available widgets</h3>
-                            <div className="space-y-2">
-                                {filteredWidgets.map((widget) => {
-                                    const isAdded = isWidgetAdded(widget.type);
-                                    return (
-                                        <button
-                                            key={widget.type}
-                                            onClick={() => handleSelectWidget(widget.type)}
-                                            className={cn(
-                                                'w-full text-left p-3 rounded-lg transition-all flex items-center gap-3',
-                                                selectedWidget === widget.type
-                                                    ? 'bg-blue-100 text-blue-900'
-                                                    : 'hover:bg-gray-100'
-                                            )}
-                                        >
-                                            <div className="flex-shrink-0">
-                                                {getIcon(widget.icon)}
-                                            </div>
-                                            <span className="text-sm font-medium flex-1">{widget.title}</span>
-                                            {isAdded && (
-                                                <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
-                                            )}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                            {filteredWidgets.length === 0 && (
-                                <div className="text-center py-12 text-gray-500">
-                                    <Search className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                            {filteredWidgets.length > 0 ? (
+                                <div className="grid grid-cols-2 gap-2">
+                                    {filteredWidgets.map((widget) => {
+                                        const isAdded = isWidgetAdded(widget.type);
+                                        return (
+                                            <button
+                                                key={widget.type}
+                                                onClick={() => handleSelectWidget(widget.type)}
+                                                className={cn(
+                                                    'p-3 rounded-lg border-2 transition-all text-left flex flex-col items-start',
+                                                    selectedWidget === widget.type
+                                                        ? 'border-blue-600 bg-blue-50'
+                                                        : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                                                )}
+                                            >
+                                                <div className="flex items-start justify-between w-full mb-1.5">
+                                                    <div className="text-blue-600 flex-shrink-0">
+                                                        {getIcon(widget.icon)}
+                                                    </div>
+                                                    {isAdded && (
+                                                        <Check className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
+                                                    )}
+                                                </div>
+                                                <p className="text-xs font-semibold text-gray-900 line-clamp-1">{widget.title}</p>
+                                                <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{widget.description}</p>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="text-center py-8 text-gray-500">
+                                    <Search className="w-6 h-6 mx-auto mb-2 text-gray-300" />
                                     <p className="text-xs">No widgets found</p>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    {/* Right Content - Preview and Configuration */}
-                    <div className="flex-1 overflow-y-auto p-6 bg-gray-50 pt-4">
+                    {/* Right Column - Preview and Configuration */}
+                    <div className="flex-1 flex flex-col overflow-y-auto p-6">
                         {selectedDefinition ? (
-                            <div className="max-w-2xl mx-auto space-y-4">
+                            <div className="space-y-4">
                                 {/* Preview Card - Fixed Size */}
-                                <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl p-8 border border-gray-300 h-80">
-                                    <p className="text-xs font-medium text-gray-600 mb-4 text-center">Preview ({selectedSize})</p>
-                                    <div className="flex items-center justify-center h-56">
+                                <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl p-6 border border-gray-300 h-[280px]">
+                                    <p className="text-xs font-medium text-gray-600 mb-3 text-center">Preview ({selectedSize})</p>
+                                    <div className="flex items-center justify-center h-[calc(100%-2.5rem)]">
                                         {(() => {
                                             const sizeMap: Record<WidgetSize, { w: number; h: number }> = {
                                                 '1x1': { w: 1, h: 1 },
@@ -267,8 +249,8 @@ export function WidgetLibrary({ isOpen, onClose, onAddWidget, existingWidgets }:
                                 </div>
 
                                 {/* Configuration */}
-                                <div className="bg-white rounded-lg p-6 border border-gray-200">
-                                    <h4 className="text-lg font-semibold text-gray-900 mb-4">{selectedDefinition.title}</h4>
+                                <div className="bg-white rounded-lg p-4 border border-gray-200">
+                                    <h4 className="text-base font-semibold text-gray-900 mb-3">{selectedDefinition.title}</h4>
 
                                     {/* Size Selection */}
                                     <div className="mb-6">
@@ -350,51 +332,52 @@ export function WidgetLibrary({ isOpen, onClose, onAddWidget, existingWidgets }:
                                 </div>
 
                                 {/* Add to Dashboard Button */}
-                                <button
-                                    onClick={handleAddWidget}
-                                    disabled={isSelectedWidgetAdded || isAddingWidget}
-                                    className={cn(
-                                        "w-full px-4 py-3 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2",
-                                        isSelectedWidgetAdded
-                                            ? "bg-green-100 text-green-700 cursor-not-allowed"
-                                            : isAddingWidget
-                                                ? "bg-blue-600 text-white cursor-wait opacity-75"
-                                                : "bg-blue-600 text-white hover:bg-blue-700"
-                                    )}
-                                >
-                                    {isSelectedWidgetAdded ? (
-                                        <>
-                                            <Check className="w-4 h-4" />
-                                            Added
-                                        </>
-                                    ) : isAddingWidget ? (
-                                        <>
-                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                            Adding...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Plus className="w-4 h-4" />
-                                            Add to Dashboard
-                                        </>
-                                    )}
-                                </button>
+                                <div className="mt-6 pt-4 border-t border-gray-200">
+                                    <button
+                                        onClick={handleAddWidget}
+                                        disabled={isSelectedWidgetAdded || isAddingWidget}
+                                        className={cn(
+                                            "w-full px-4 py-3 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2",
+                                            isSelectedWidgetAdded
+                                                ? "bg-green-100 text-green-700 cursor-not-allowed"
+                                                : isAddingWidget
+                                                    ? "bg-blue-600 text-white cursor-wait opacity-75"
+                                                    : "bg-blue-600 text-white hover:bg-blue-700"
+                                        )}
+                                    >
+                                        {isSelectedWidgetAdded ? (
+                                            <>
+                                                <Check className="w-4 h-4" />
+                                                Added
+                                            </>
+                                        ) : isAddingWidget ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                Adding...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Plus className="w-4 h-4" />
+                                                Add to Dashboard
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
                             </div>
                         ) : (
-                            <div className="flex items-center justify-center h-full text-gray-500">
-                                <div className="text-center">
-                                    <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <Search className="w-8 h-8 text-gray-400" />
-                                    </div>
-                                    <p className="text-sm">Select a widget to preview and configure</p>
+                            <div className="flex-1 flex flex-col items-center justify-center text-gray-500">
+                                <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mb-3">
+                                    <Search className="w-6 h-6 text-gray-400" />
                                 </div>
+                                <p className="text-sm font-medium">Select a widget</p>
+                                <p className="text-xs text-gray-400 mt-1">to preview and configure</p>
                             </div>
                         )}
                     </div>
                 </div>
 
                 {/* Footer */}
-                <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-end bg-gray-50">
+                <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-end bg-gray-50 flex-shrink-0">
                     <button
                         onClick={onClose}
                         className="px-6 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
