@@ -182,9 +182,10 @@ export function Dashboard() {
             return a.x - b.x;
         });
 
-        // Reposition widgets vertically stacked, filling left to right
+        // Reposition widgets, filling left to right, top to bottom
         let currentY = 0;
         let currentX = 0;
+        let currentRowHeight = 0;
         const newLayouts: RGLLayout[] = [];
 
         sortedLayouts.forEach((layout) => {
@@ -192,16 +193,20 @@ export function Dashboard() {
             if (currentX + layout.w > 12) {
                 // Move to next row
                 currentX = 0;
-                currentY += Math.max(...newLayouts.filter(l => l.y === currentY - Math.max(...newLayouts.map(l => l.h))).map(l => l.h) || [1]);
+                currentY += currentRowHeight;
+                currentRowHeight = 0;
             }
 
+            // Add widget to current position
             newLayouts.push({
                 ...layout,
                 x: currentX,
                 y: currentY,
             });
 
+            // Update tracking variables
             currentX += layout.w;
+            currentRowHeight = Math.max(currentRowHeight, layout.h);
         });
 
         setLayouts({ lg: newLayouts });
