@@ -2,12 +2,23 @@
 
 import React, { useState, useEffect } from 'react';
 import { Responsive, WidthProvider, Layout as RGLLayout } from 'react-grid-layout';
-import { Plus, LayoutGrid, User, Bell, Search } from 'lucide-react';
+import { Plus, LayoutGrid, Search, X } from 'lucide-react';
 import { Widget, WidgetType, WidgetSize, WidgetConfig } from '@/types/widget';
 import { WidgetRenderer } from './widgets/WidgetRenderer';
 import { WidgetLibrary } from './WidgetLibrary';
 import { ConfirmationDialog } from './ConfirmationDialog';
-import { generateId, sizeToGrid } from '@/lib/utils';
+import {
+    initializeDefaultDashboard,
+    createWidget,
+    boundLayoutToGrid,
+    autoLayoutWidgets,
+    saveDashboardToStorage,
+    loadDashboardFromStorage,
+    clearDashboardStorage,
+    deepCopyState,
+    removeWidget,
+    GRID_CONFIG,
+} from '@/lib/dashboard-utils';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 
@@ -30,40 +41,30 @@ export function Dashboard() {
     // Load saved dashboard state from localStorage
     useEffect(() => {
         setMounted(true);
-        const savedWidgets = localStorage.getItem('dashboard-widgets');
-        const savedLayouts = localStorage.getItem('dashboard-layouts');
+        const savedData = loadDashboardFromStorage();
 
-        if (savedWidgets && savedLayouts) {
-            try {
-                setWidgets(JSON.parse(savedWidgets));
-                setLayouts(JSON.parse(savedLayouts));
-            } catch (e) {
-                console.error('Failed to load dashboard state:', e);
-            }
+        if (savedData) {
+            setWidgets(savedData.widgets);
+            setLayouts(savedData.layouts);
         } else {
             // Initialize with default widgets
-            initializeDefaultWidgets();
+            const { widgets: defaultWidgets, layouts: defaultLayouts } = initializeDefaultDashboard();
+            setWidgets(defaultWidgets);
+            setLayouts({ lg: defaultLayouts });
         }
     }, []);
 
     // Only save to localStorage when not in edit mode (i.e., after Save is clicked)
     useEffect(() => {
         if (mounted && !isEditMode) {
-            localStorage.setItem('dashboard-widgets', JSON.stringify(widgets));
-            localStorage.setItem('dashboard-layouts', JSON.stringify(layouts));
+            saveDashboardToStorage(widgets, layouts);
         }
     }, [widgets, layouts, mounted, isEditMode]);
 
     // Enter edit mode and save current state as backup
     const handleEnterEditMode = () => {
-        // Create deep copies of current state as backup
-        const widgetsCopy = JSON.parse(JSON.stringify(widgets));
-        const layoutsCopy = JSON.parse(JSON.stringify(layouts));
-
-        console.log('Backing up state:', { widgets: widgetsCopy.length, layouts: layoutsCopy.lg.length });
-
-        setSavedWidgets(widgetsCopy);
-        setSavedLayouts(layoutsCopy);
+        setSavedWidgets(deepCopyState(widgets));
+        setSavedLayouts(deepCopyState(layouts));
         setIsEditMode(true);
     };
 
@@ -75,69 +76,8 @@ export function Dashboard() {
         setIsLibraryOpen(true);
     };
 
-    const initializeDefaultWidgets = () => {
-        const defaultWidgets: Widget[] = [
-            {
-                id: generateId(),
-                type: 'course-slider',
-                title: 'Course Slider',
-                size: '6x2',
-                config: { showPinnedOnly: true },
-            },
-            {
-                id: generateId(),
-                type: 'agenda',
-                title: 'Agenda',
-                size: '3x2',
-                config: {},
-            },
-            {
-                id: generateId(),
-                type: 'todo-list',
-                title: 'Todo List',
-                size: '3x2',
-                config: {},
-            },
-            {
-                id: generateId(),
-                type: 'course-table',
-                title: 'Course Table',
-                size: '6x2',
-                config: { showPinnedOnly: false },
-            },
-        ];
-
-        const defaultLayouts: RGLLayout[] = [
-            { i: defaultWidgets[0].id, x: 0, y: 0, w: 6, h: 2, minW: 3, minH: 2 },
-            { i: defaultWidgets[1].id, x: 6, y: 0, w: 3, h: 2, minW: 2, minH: 2 },
-            { i: defaultWidgets[2].id, x: 9, y: 0, w: 3, h: 2, minW: 2, minH: 2 },
-            { i: defaultWidgets[3].id, x: 0, y: 2, w: 6, h: 2, minW: 4, minH: 2 },
-        ];
-
-        setWidgets(defaultWidgets);
-        setLayouts({ lg: defaultLayouts });
-    };
-
     const handleAddWidget = (type: WidgetType, size: WidgetSize, config: WidgetConfig) => {
-        const newWidget: Widget = {
-            id: generateId(),
-            type,
-            title: type,
-            size,
-            config,
-        };
-
-        const { w, h } = sizeToGrid(size);
-        const newLayout: RGLLayout = {
-            i: newWidget.id,
-            x: 0,
-            y: Infinity, // Puts it at the bottom
-            w,
-            h,
-            minW: 1,
-            minH: 1,
-        };
-
+        const { widget: newWidget, layout: newLayout } = createWidget(type, size, config);
         setWidgets([...widgets, newWidget]);
         setLayouts({
             lg: [...layouts.lg, newLayout],
@@ -145,7 +85,6 @@ export function Dashboard() {
     };
 
     const handleDeleteWidget = (id: string) => {
-        console.log('Delete clicked for widget:', id);
         setConfirmDialog({
             isOpen: true,
             type: 'delete',
@@ -155,31 +94,23 @@ export function Dashboard() {
 
     const confirmDeleteWidget = () => {
         if (confirmDialog.widgetId) {
-            setWidgets(widgets.filter((widget) => widget.id !== confirmDialog.widgetId));
-            setLayouts({
-                lg: layouts.lg.filter((layout) => layout.i !== confirmDialog.widgetId),
-            });
+            const { widgets: updatedWidgets, layouts: updatedLayouts } = removeWidget(widgets, layouts, confirmDialog.widgetId);
+            setWidgets(updatedWidgets);
+            setLayouts(updatedLayouts);
         }
         setConfirmDialog({ isOpen: false, type: null });
     };
 
     const handleLayoutChange = (layout: RGLLayout[], allLayouts: any) => {
-        // Ensure widgets don't go beyond grid boundaries
-        const boundedLayout = layout.map((item) => {
-            const maxX = 12 - item.w; // 12 is the column count
-            return {
-                ...item,
-                x: Math.max(0, Math.min(item.x, maxX)),
-            };
-        });
+        const boundedLayout = boundLayoutToGrid(layout, GRID_CONFIG.COLUMNS);
         setLayouts({ lg: boundedLayout });
     };
 
-
     const confirmResetDashboard = () => {
-        localStorage.removeItem('dashboard-widgets');
-        localStorage.removeItem('dashboard-layouts');
-        initializeDefaultWidgets();
+        clearDashboardStorage();
+        const { widgets: defaultWidgets, layouts: defaultLayouts } = initializeDefaultDashboard();
+        setWidgets(defaultWidgets);
+        setLayouts({ lg: defaultLayouts });
         setConfirmDialog({ isOpen: false, type: null });
     };
 
@@ -196,8 +127,6 @@ export function Dashboard() {
     };
 
     const confirmCancelEdit = () => {
-        console.log('Restoring state:', { savedWidgets: savedWidgets.length, savedLayouts: savedLayouts.lg.length });
-
         // Revert to saved state FIRST, then exit edit mode
         // This ensures the restored state is what gets saved to localStorage
         setWidgets([...savedWidgets]);
@@ -211,39 +140,7 @@ export function Dashboard() {
     };
 
     const handleAutoLayout = () => {
-        // Sort widgets by current position (top-to-bottom, left-to-right)
-        const sortedLayouts = [...layouts.lg].sort((a, b) => {
-            if (a.y !== b.y) return a.y - b.y;
-            return a.x - b.x;
-        });
-
-        // Reposition widgets, filling left to right, top to bottom
-        let currentY = 0;
-        let currentX = 0;
-        let currentRowHeight = 0;
-        const newLayouts: RGLLayout[] = [];
-
-        sortedLayouts.forEach((layout) => {
-            // Check if adding this widget would exceed column width
-            if (currentX + layout.w > 12) {
-                // Move to next row
-                currentX = 0;
-                currentY += currentRowHeight;
-                currentRowHeight = 0;
-            }
-
-            // Add widget to current position
-            newLayouts.push({
-                ...layout,
-                x: currentX,
-                y: currentY,
-            });
-
-            // Update tracking variables
-            currentX += layout.w;
-            currentRowHeight = Math.max(currentRowHeight, layout.h);
-        });
-
+        const newLayouts = autoLayoutWidgets(layouts.lg, GRID_CONFIG.COLUMNS);
         setLayouts({ lg: newLayouts });
     };
 
@@ -261,31 +158,73 @@ export function Dashboard() {
                             <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Good Morning, Leo</h1>
                             <p className="text-xs sm:text-sm text-gray-600 mt-0.5">Welcome back to your dashboard</p>
                         </div>
-                        <div className="flex items-center gap-2 sm:gap-3">
-                            <div className="relative hidden md:block">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        {isEditMode ? (
+                            <div className="px-3 sm:px-4 py-2 rounded-lg border border-blue-300 bg-blue-50 w-full sm:w-auto">
+                                <p className="text-xs sm:text-sm text-blue-800 font-medium">
+                                    ✏️ Edit mode • Add / Remove widget(s) • Rearrange widget(s) by resizing or dragging
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="relative w-full sm:w-auto min-w-[150px] sm:min-w-[600px]">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                                 <input
                                     type="text"
-                                    placeholder="Search..."
-                                    className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-64"
+                                    placeholder="Search widgets, courses, or tasks..."
+                                    className="w-full pl-10 pr-4 py-2.5 text-sm text-gray-700 placeholder:text-gray-400 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
                                 />
                             </div>
-                            <button
-                                className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                                aria-label="Notifications"
-                            >
-                                <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
-                                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                            </button>
-                            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors" aria-label="Profile">
-                                <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
-                            </button>
+                        )}
+                        {/* Dashboard Action Buttons - Sticky */}
+                        <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2">
+                            <div className="mb-2 sm:mb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                <div className={`flex ${!isEditMode ? 'justify-end w-full' : 'justify-end gap-2 sm:gap-3'} gap-2 sm:gap-3 flex-wrap`}>
+                                    {!isEditMode ? (
+                                        <button
+                                            onClick={handleEnterEditMode}
+                                            className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                                        >
+                                            Edit Dashboard
+                                        </button>
+                                    ) : (
+                                        <>
+                                            <button
+                                                onClick={handleAutoLayout}
+                                                className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors whitespace-nowrap"
+                                            >
+                                                Auto Layout
+                                            </button>
+
+                                            <button
+                                                onClick={handleOpenLibrary}
+                                                className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-1 sm:gap-2 whitespace-nowrap"
+                                            >
+                                                <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                                                Add Widget
+                                            </button>
+
+                                            <button
+                                                onClick={handleSaveAndExitEdit}
+                                                className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors whitespace-nowrap"
+                                            >
+                                                Save
+                                            </button>
+                                            <button
+                                                onClick={handleCancelEdit}
+                                                className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1 sm:gap-2"
+                                            >
+                                                <X className="w-3 h-3 sm:w-4 sm:h-4" />
+                                                Cancel
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     {/* Navigation Tabs */}
-                    <nav className="flex gap-3 sm:gap-6 mt-3 sm:mt-4 border-b border-gray-200 -mb-px overflow-x-auto">
-                        {['Dashboard'].map((tab) => (
+                    <nav className="flex gap-3 sm:gap-8 mt-3 sm:mt-4 border-b border-gray-200 -mb-px overflow-x-auto">
+                        {['Dashboard', 'My Curriculum', 'Documents', 'Attendance', 'Invoices', 'Availability'].map((tab) => (
                             <button
                                 key={tab}
                                 className={`pb-2 sm:pb-3 text-xs sm:text-sm font-medium transition-colors relative whitespace-nowrap ${tab === 'Dashboard'
@@ -302,56 +241,10 @@ export function Dashboard() {
 
 
 
+
+
             {/* Dashboard Grid */}
             <div className="px-4 sm:px-6 py-4 sm:py-6 overflow-x-hidden">
-                {/* Dashboard Action Buttons */}
-                <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    {isEditMode && (
-                        <div className="px-3 sm:px-4 py-2 rounded-lg border border-blue-300 bg-blue-50 w-full sm:w-auto">
-                            <p className="text-xs sm:text-sm text-blue-800 font-medium">
-                                ✏️ Edit mode enabled • Drag header to reposition • Resize with the blue handle • Delete with the trash icon
-                            </p>
-                        </div>
-                    )}
-                    <div className={`flex ${!isEditMode ? 'justify-end w-full' : 'justify-end gap-2 sm:gap-3'} gap-2 sm:gap-3 flex-wrap`}>
-                        {!isEditMode ? (
-                            <button
-                                onClick={handleEnterEditMode}
-                                className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
-                            >
-                                Edit Dashboard
-                            </button>
-                        ) : (
-                            <>
-                                <button
-                                    onClick={handleAutoLayout}
-                                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors whitespace-nowrap"
-                                >
-                                    Auto Layout
-                                </button>
-                                <button
-                                    onClick={handleOpenLibrary}
-                                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-1 sm:gap-2 whitespace-nowrap"
-                                >
-                                    <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                                    Add Widget
-                                </button>
-                                <button
-                                    onClick={handleCancelEdit}
-                                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors whitespace-nowrap"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handleSaveAndExitEdit}
-                                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors whitespace-nowrap"
-                                >
-                                    Save
-                                </button>
-                            </>
-                        )}
-                    </div>
-                </div>
 
                 {!isEditMode && widgets.length === 0 ? (
                     <div className="text-center py-20">
@@ -380,16 +273,16 @@ export function Dashboard() {
                     <ResponsiveGridLayout
                         className={`layout ${isEditMode ? 'edit-mode' : ''}`}
                         layouts={layouts}
-                        breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-                        cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-                        rowHeight={150}
+                        breakpoints={GRID_CONFIG.BREAKPOINTS}
+                        cols={GRID_CONFIG.COLS}
+                        rowHeight={GRID_CONFIG.ROW_HEIGHT}
                         onLayoutChange={handleLayoutChange}
                         draggableHandle=".cursor-move"
                         isDraggable={isEditMode}
                         isResizable={isEditMode}
                         compactType="vertical"
                         preventCollision={false}
-                        margin={[16, 16]}
+                        margin={GRID_CONFIG.MARGIN}
                         isBounded={true}
                         allowOverlap={false}
                     >

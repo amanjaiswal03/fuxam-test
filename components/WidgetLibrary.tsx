@@ -2,10 +2,19 @@
 
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, Check } from 'lucide-react';
-import * as Icons from 'lucide-react';
 import { WidgetType, WidgetSize, WidgetConfig, Widget } from '@/types/widget';
 import { widgetDefinitions, getAllCategories } from '@/lib/widget-definitions';
-import { cn } from '@/lib/utils';
+import { sizeToGrid, cn } from '@/lib/utils';
+import {
+    filterWidgets,
+    getIcon,
+    isWidgetAdded,
+    getPreviewDimensions,
+    parseSizeString,
+    lockBodyScroll,
+    simulateDelay,
+    capitalizeFirst,
+} from '@/lib/widget-library-utils';
 
 interface WidgetLibraryProps {
     isOpen: boolean;
@@ -23,28 +32,14 @@ export function WidgetLibrary({ isOpen, onClose, onAddWidget, existingWidgets }:
     const [isAddingWidget, setIsAddingWidget] = useState(false);
 
     const categories = getAllCategories();
+    const filteredWidgets = filterWidgets(searchQuery, selectedCategory);
 
     // Prevent body scroll when modal is open
     useEffect(() => {
         if (isOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'unset';
+            return lockBodyScroll();
         }
-
-        // Cleanup on unmount
-        return () => {
-            document.body.style.overflow = 'unset';
-        };
     }, [isOpen]);
-
-    const filteredWidgets = Object.values(widgetDefinitions).filter((widget) => {
-        const matchesSearch =
-            widget.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            widget.description.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesCategory = selectedCategory.toLowerCase() === 'all' || selectedCategory.toLowerCase() === widget.category.toLowerCase();
-        return matchesSearch && matchesCategory;
-    });
 
     const handleSelectWidget = (type: WidgetType) => {
         const definition = widgetDefinitions[type];
@@ -55,11 +50,11 @@ export function WidgetLibrary({ isOpen, onClose, onAddWidget, existingWidgets }:
 
     const handleQuickAddWidget = async (type: WidgetType) => {
         const definition = widgetDefinitions[type];
-        const isAdded = isWidgetAdded(type);
+        const alreadyAdded = isWidgetAdded(type, existingWidgets);
 
-        if (!isAdded) {
+        if (!alreadyAdded) {
             setIsAddingWidget(true);
-            await new Promise(resolve => setTimeout(resolve, 600));
+            await simulateDelay();
             onAddWidget(type, definition.defaultSize, {});
             setIsAddingWidget(false);
         }
@@ -68,28 +63,21 @@ export function WidgetLibrary({ isOpen, onClose, onAddWidget, existingWidgets }:
     const handleAddWidget = async () => {
         if (selectedWidget && !isSelectedWidgetAdded) {
             setIsAddingWidget(true);
-            // Simulate a brief delay for better UX feedback
-            await new Promise(resolve => setTimeout(resolve, 600));
+            await simulateDelay();
             onAddWidget(selectedWidget, selectedSize, config);
             setIsAddingWidget(false);
         }
     };
 
-    const getIcon = (iconName: string) => {
-        const Icon = (Icons as any)[iconName];
+    const renderIcon = (iconName: string) => {
+        const Icon = getIcon(iconName);
         return Icon ? <Icon className="w-5 h-5" /> : null;
     };
 
     if (!isOpen) return null;
 
     const selectedDefinition = selectedWidget ? widgetDefinitions[selectedWidget] : null;
-
-    // Check if widget type already exists in dashboard
-    const isWidgetAdded = (widgetType: WidgetType) => {
-        return existingWidgets.some(widget => widget.type === widgetType);
-    };
-
-    const isSelectedWidgetAdded = selectedWidget ? isWidgetAdded(selectedWidget) : false;
+    const isSelectedWidgetAdded = selectedWidget ? isWidgetAdded(selectedWidget, existingWidgets) : false;
 
     return (
         <div
@@ -147,19 +135,19 @@ export function WidgetLibrary({ isOpen, onClose, onAddWidget, existingWidgets }:
                                                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                         )}
                                     >
-                                        {category.charAt(0).toUpperCase() + category.slice(1)}
+                                        {capitalizeFirst(category)}
                                     </button>
                                 ))}
                             </div>
                         </div>
 
-                        {/* Widgets Grid - 2x2 */}
+                        {/* Widgets List */}
                         <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-3 sm:py-4">
                             <h3 className="text-xs sm:text-sm font-semibold text-gray-900 mb-2 sm:mb-3">Available widgets</h3>
                             {filteredWidgets.length > 0 ? (
                                 <div className="grid grid-cols-2 gap-2">
                                     {filteredWidgets.map((widget) => {
-                                        const isAdded = isWidgetAdded(widget.type);
+                                        const alreadyAdded = isWidgetAdded(widget.type, existingWidgets);
                                         return (
                                             <div key={widget.type} className="relative">
                                                 {/* Desktop: Clickable card for selection */}
@@ -175,9 +163,9 @@ export function WidgetLibrary({ isOpen, onClose, onAddWidget, existingWidgets }:
                                                 >
                                                     <div className="flex items-start justify-between w-full mb-1.5">
                                                         <div className="text-blue-600 flex-shrink-0">
-                                                            {getIcon(widget.icon)}
+                                                            {renderIcon(widget.icon)}
                                                         </div>
-                                                        {isAdded && (
+                                                        {alreadyAdded && (
                                                             <Check className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
                                                         )}
                                                     </div>
@@ -189,16 +177,16 @@ export function WidgetLibrary({ isOpen, onClose, onAddWidget, existingWidgets }:
                                                 <div
                                                     className={cn(
                                                         'sm:hidden p-3 rounded-lg border-2 transition-all flex flex-col items-start',
-                                                        isAdded
+                                                        alreadyAdded
                                                             ? 'border-green-200 bg-green-50'
                                                             : 'border-gray-200 bg-white'
                                                     )}
                                                 >
                                                     <div className="flex items-start justify-between w-full mb-1.5">
                                                         <div className="text-blue-600 flex-shrink-0">
-                                                            {getIcon(widget.icon)}
+                                                            {renderIcon(widget.icon)}
                                                         </div>
-                                                        {isAdded && (
+                                                        {alreadyAdded && (
                                                             <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
                                                         )}
                                                     </div>
@@ -206,15 +194,15 @@ export function WidgetLibrary({ isOpen, onClose, onAddWidget, existingWidgets }:
                                                     <p className="text-xs text-gray-500 mb-2 line-clamp-1">{widget.description}</p>
                                                     <button
                                                         onClick={() => handleQuickAddWidget(widget.type)}
-                                                        disabled={isAdded || isAddingWidget}
+                                                        disabled={alreadyAdded || isAddingWidget}
                                                         className={cn(
                                                             'w-full px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
-                                                            isAdded
+                                                            alreadyAdded
                                                                 ? 'bg-green-100 text-green-700 cursor-not-allowed'
                                                                 : 'bg-blue-600 text-white hover:bg-blue-700'
                                                         )}
                                                     >
-                                                        {isAdded ? 'Added' : 'Add'}
+                                                        {alreadyAdded ? 'Added' : 'Add'}
                                                     </button>
                                                 </div>
                                             </div>
@@ -239,26 +227,16 @@ export function WidgetLibrary({ isOpen, onClose, onAddWidget, existingWidgets }:
                                     <p className="text-xs font-medium text-gray-600 mb-3 text-center">Preview ({selectedSize})</p>
                                     <div className="flex items-center justify-center h-[calc(100%-2.5rem)]">
                                         {(() => {
-                                            const sizeMap: Record<WidgetSize, { w: number; h: number }> = {
-                                                '1x1': { w: 1, h: 1 },
-                                                '2x2': { w: 2, h: 2 },
-                                                '3x1': { w: 3, h: 1 },
-                                                '3x2': { w: 3, h: 2 },
-                                                '4x1': { w: 4, h: 1 },
-                                                '4x2': { w: 4, h: 2 },
-                                                '6x1': { w: 6, h: 1 },
-                                                '6x2': { w: 6, h: 2 },
-                                            };
-                                            const { w, h } = sizeMap[selectedSize];
-                                            const baseWidth = 70;
-                                            const baseHeight = 100;
+                                            const { w, h } = sizeToGrid(selectedSize);
+                                            const { width, height } = getPreviewDimensions(w, h);
+                                            const IconComponent = getIcon(selectedDefinition.icon);
 
                                             return (
                                                 <div
                                                     className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden transition-all duration-200"
                                                     style={{
-                                                        width: `${w * baseWidth}px`,
-                                                        height: `${h * baseHeight}px`,
+                                                        width: `${width}px`,
+                                                        height: `${height}px`,
                                                     }}
                                                 >
                                                     {/* Widget Header */}
@@ -273,7 +251,7 @@ export function WidgetLibrary({ isOpen, onClose, onAddWidget, existingWidgets }:
                                                     <div className="p-2 flex flex-col items-center justify-center" style={{ height: 'calc(100% - 28px)' }}>
                                                         <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mb-1.5">
                                                             <div className="text-blue-600 scale-[0.6]">
-                                                                {getIcon(selectedDefinition.icon)}
+                                                                {IconComponent && <IconComponent className="w-5 h-5" />}
                                                             </div>
                                                         </div>
                                                         <div className="text-center space-y-1 w-full px-1">
@@ -292,7 +270,7 @@ export function WidgetLibrary({ isOpen, onClose, onAddWidget, existingWidgets }:
                                         })()}
                                     </div>
                                     <p className="text-xs text-gray-600 text-center mt-2">
-                                        {selectedDefinition.title} • {selectedSize.split('x')[0]} cols × {selectedSize.split('x')[1]} rows
+                                        {selectedDefinition.title} • {parseSizeString(selectedSize).cols} cols × {parseSizeString(selectedSize).rows} rows
                                     </p>
                                 </div>
 

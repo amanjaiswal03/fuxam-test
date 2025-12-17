@@ -18,7 +18,6 @@ export function LinkWidget({ title, icon: Icon, href, onDelete, description }: L
         className="block h-full"
         onClick={(e) => {
           e.preventDefault();
-          console.log(`Navigate to: ${href}`);
         }}
       >
         <div className="h-full flex flex-col items-center justify-center text-center hover:bg-gray-50 rounded-lg transition-colors cursor-pointer p-6">
