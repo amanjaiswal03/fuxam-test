@@ -1,0 +1,28 @@
+import React from 'react';
+import { BaseWidget } from './BaseWidget';
+import { Image as ImageIcon } from 'lucide-react';
+
+interface ImageWidgetProps {
+  imageUrl?: string;
+  onDelete?: () => void;
+  onSettings?: () => void;
+}
+
+export function ImageWidget({ imageUrl, onDelete, onSettings }: ImageWidgetProps) {
+  return (
+    <BaseWidget title="Image" onDelete={onDelete} onSettings={onSettings}>
+      <div className="h-full flex items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+        {imageUrl ? (
+          <img src={imageUrl} alt="Widget" className="w-full h-full object-cover rounded-lg" />
+        ) : (
+          <div className="text-center text-gray-400">
+            <ImageIcon className="w-12 h-12 mx-auto mb-2" />
+            <p className="text-sm">No image set</p>
+            <p className="text-xs mt-1">Click settings to add an image</p>
+          </div>
+        )}
+      </div>
+    </BaseWidget>
+  );
+}
+
